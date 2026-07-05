@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/ByteBySway/ev-battery-shield">
-    <img src="src/assets/ev_battery_shield_banner.jpg" width="100%" alt="EV Battery Shield Banner" />
+    <img src="src/assets/ev_battery_shield_clean_banner.jpg" width="100%" alt="EV Battery Shield Banner" />
   </a>
 </p>
 
