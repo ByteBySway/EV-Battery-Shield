@@ -9,8 +9,8 @@
 </p>
 
 <p align="center">
-  <a href="https://ev-battery-shield.base44.app">
-    <img src="https://img.shields.io/badge/Live%20Demo-Base44%20Deployed-3b82f6?style=for-the-badge&logo=vercel&logoColor=white" alt="Live App" />
+  <a href="https://ev-battery-shield.vercel.app">
+    <img src="https://img.shields.io/badge/Live%20Demo-Vercel%20Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Live App" />
   </a>
   <img src="https://img.shields.io/badge/Vite-6.1.0-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/React-18.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React" />
