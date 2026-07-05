@@ -87,4 +87,4 @@ npm run build
 ---
 
 ## ⚖️ License & Disclaimers
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. Built on the Base44 app development platform.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
