@@ -57,18 +57,24 @@ export default function Dashboard() {
 
   // Simulate real-time updates smoothly
   useEffect(() => {
+    let tickCount = 0;
+
     const interval = setInterval(() => {
       setLiveData(prev => {
-        // Small, realistic temperature/voltage fluctuations
-        const tempChange = (Math.random() - 0.5) * 0.4;
-        const voltChange = (Math.random() - 0.5) * 1.0;
-        const currChange = (Math.random() - 0.5) * 1.2;
+        tickCount++;
+
+        // Only fluctuate 15% of the time, otherwise values remain completely constant
+        const shouldFluctuate = Math.random() < 0.15;
+
+        const tempChange = shouldFluctuate ? (Math.random() - 0.5) * 0.3 : 0;
+        const voltChange = shouldFluctuate ? (Math.random() - 0.5) * 0.8 : 0;
+        const currChange = shouldFluctuate ? (Math.random() - 0.5) * 0.6 : 0;
         
-        const newTemp = Math.max(18, Math.min(45, prev.temperature + tempChange));
-        const newVolt = Math.max(340, Math.min(410, prev.voltage + voltChange));
-        const newCurr = Math.max(5, Math.min(45, prev.current + currChange));
+        const newTemp = Math.max(22, Math.min(38, prev.temperature + tempChange));
+        const newVolt = Math.max(360, Math.min(395, prev.voltage + voltChange));
+        const newCurr = Math.max(10, Math.min(30, prev.current + currChange));
         
-        // Slowly drop charge level over time
+        // Slowly drop charge level over time (e.g. 5% chance of dropping 1%)
         const newPerc = Math.max(10, prev.percentage - (Math.random() > 0.95 ? 1 : 0));
 
         const newReading = {
@@ -97,21 +103,23 @@ export default function Dashboard() {
           newReading.status = 'safe';
         }
 
-        // Persist to database asynchronously to build consistent trends
-        base44.entities.BatteryReading.create({
-          battery_id: newReading.battery_id,
-          percentage: Math.round(newReading.percentage),
-          temperature: parseFloat(newReading.temperature.toFixed(2)),
-          voltage: parseFloat(newReading.voltage.toFixed(2)),
-          current: parseFloat(newReading.current.toFixed(2)),
-          health_score: newReading.health_score,
-          cell_balance: newReading.cell_balance,
-          efficiency: newReading.efficiency,
-          status: newReading.status,
-          timestamp: newReading.timestamp
-        }).then(() => {
-          queryClient.invalidateQueries({ queryKey: ['batteryReadings'] });
-        }).catch(err => console.error("Error creating reading:", err));
+        // Only save to DB when values fluctuate, or every 60 seconds (12 ticks) to avoid spamming the backend
+        if (shouldFluctuate || tickCount % 12 === 0) {
+          base44.entities.BatteryReading.create({
+            battery_id: newReading.battery_id,
+            percentage: Math.round(newReading.percentage),
+            temperature: parseFloat(newReading.temperature.toFixed(2)),
+            voltage: parseFloat(newReading.voltage.toFixed(2)),
+            current: parseFloat(newReading.current.toFixed(2)),
+            health_score: newReading.health_score,
+            cell_balance: newReading.cell_balance,
+            efficiency: newReading.efficiency,
+            status: newReading.status,
+            timestamp: newReading.timestamp
+          }).then(() => {
+            queryClient.invalidateQueries({ queryKey: ['batteryReadings'] });
+          }).catch(err => console.error("Error creating reading:", err));
+        }
 
         return newReading;
       });
