@@ -21,21 +21,21 @@ export default function Dashboard() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const queryClient = useQueryClient();
 
-  // Simulated real-time data (in production, this would come from actual sensors)
-  const generateReading = () => ({
+  // Base values for gradual simulation
+  const initialReading = () => ({
     battery_id: 'EV-001',
-    percentage: Math.floor(70 + Math.random() * 25),
-    temperature: 18 + Math.random() * 12,
-    voltage: 350 + Math.random() * 50,
-    current: 15 + Math.random() * 20,
-    health_score: Math.floor(75 + Math.random() * 20),
-    cell_balance: Math.floor(80 + Math.random() * 18),
-    efficiency: Math.floor(85 + Math.random() * 12),
+    percentage: 95,
+    temperature: 24.5,
+    voltage: 380,
+    current: 18.2,
+    health_score: 92,
+    cell_balance: 94,
+    efficiency: 91,
     status: 'safe',
     timestamp: new Date().toISOString()
   });
 
-  const [liveData, setLiveData] = useState(generateReading());
+  const [liveData, setLiveData] = useState(initialReading());
 
   // Fetch stored readings
   const { data: readings = [] } = useQuery({
@@ -55,31 +55,70 @@ export default function Dashboard() {
     queryFn: () => base44.entities.GreenEnergy.list('-date', 1)
   });
 
-  // Simulate real-time updates
+  // Simulate real-time updates smoothly
   useEffect(() => {
     const interval = setInterval(() => {
-      const newReading = generateReading();
-      
-      // Check for warning conditions (ideal: 20-25°C)
-                if (newReading.temperature > 25) {
-                  newReading.status = 'warning';
-                  if (newReading.temperature > 40) {
-                    newReading.status = 'critical';
-                    setActiveAlert({
-                      type: 'overheating',
-                      severity: 'critical',
-                      message: `Battery temperature is critically high at ${newReading.temperature.toFixed(1)}°C`,
-                      value: newReading.temperature.toFixed(1),
-                      threshold: 40
-                    });
-                  }
-                }
-      
-      setLiveData(newReading);
+      setLiveData(prev => {
+        // Small, realistic temperature/voltage fluctuations
+        const tempChange = (Math.random() - 0.5) * 0.4;
+        const voltChange = (Math.random() - 0.5) * 1.0;
+        const currChange = (Math.random() - 0.5) * 1.2;
+        
+        const newTemp = Math.max(18, Math.min(45, prev.temperature + tempChange));
+        const newVolt = Math.max(340, Math.min(410, prev.voltage + voltChange));
+        const newCurr = Math.max(5, Math.min(45, prev.current + currChange));
+        
+        // Slowly drop charge level over time
+        const newPerc = Math.max(10, prev.percentage - (Math.random() > 0.95 ? 1 : 0));
+
+        const newReading = {
+          ...prev,
+          temperature: newTemp,
+          voltage: newVolt,
+          current: newCurr,
+          percentage: newPerc,
+          timestamp: new Date().toISOString()
+        };
+
+        // Determine safety status based on temperature
+        if (newReading.temperature > 35) {
+          newReading.status = 'warning';
+          if (newReading.temperature > 40) {
+            newReading.status = 'critical';
+            setActiveAlert({
+              type: 'overheating',
+              severity: 'critical',
+              message: `Battery temperature is critically high at ${newReading.temperature.toFixed(1)}°C`,
+              value: newReading.temperature.toFixed(1),
+              threshold: 40
+            });
+          }
+        } else {
+          newReading.status = 'safe';
+        }
+
+        // Persist to database asynchronously to build consistent trends
+        base44.entities.BatteryReading.create({
+          battery_id: newReading.battery_id,
+          percentage: Math.round(newReading.percentage),
+          temperature: parseFloat(newReading.temperature.toFixed(2)),
+          voltage: parseFloat(newReading.voltage.toFixed(2)),
+          current: parseFloat(newReading.current.toFixed(2)),
+          health_score: newReading.health_score,
+          cell_balance: newReading.cell_balance,
+          efficiency: newReading.efficiency,
+          status: newReading.status,
+          timestamp: newReading.timestamp
+        }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['batteryReadings'] });
+        }).catch(err => console.error("Error creating reading:", err));
+
+        return newReading;
+      });
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [queryClient]);
 
   // Generate predictions based on current data
   const predictions = [

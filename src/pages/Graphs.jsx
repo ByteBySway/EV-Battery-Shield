@@ -20,52 +20,68 @@ export default function Graphs() {
     queryFn: () => base44.entities.BatteryReading.list('-timestamp', 100)
   });
 
-  // Generate sample data for demonstration
+  // Generate sample data for demonstration or pull from database
   useEffect(() => {
     const generateData = () => {
       const data = [];
       const baseTime = moment();
 
+      // If we have actual database readings, use them to build consistent trend graphs!
+      if (readings && readings.length >= 10) {
+        // Sort readings from oldest to newest
+        const sortedReadings = [...readings].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const formatted = sortedReadings.map(r => ({
+          time: moment(r.timestamp).format(
+            timeRange === 'day' ? 'HH:mm' : timeRange === 'week' ? 'ddd DD' : 'MMM D'
+          ),
+          temperature: r.temperature,
+          voltage: r.voltage,
+          current: r.current,
+          percentage: r.percentage
+        }));
+        setChartData(formatted);
+        return;
+      }
+
+      // Fallback: Generate stable (non-random) mock data using deterministic waves
       if (timeRange === 'day') {
         for (let i = 23; i >= 0; i--) {
           data.push({
             time: baseTime.clone().subtract(i, 'hours').format('HH:mm'),
-            temperature: 30 + Math.random() * 20 + Math.sin(i * 0.5) * 5,
-            voltage: 380 + Math.random() * 30 + Math.cos(i * 0.3) * 10,
-            current: 10 + Math.random() * 25 + Math.sin(i * 0.4) * 8,
-            percentage: 50 + Math.random() * 45 + Math.sin(i * 0.2) * 10
+            temperature: 24 + Math.sin(i * 0.5) * 4 + (i % 3) * 0.5,
+            voltage: 375 + Math.cos(i * 0.3) * 15 + (i % 4) * 1,
+            current: 12 + Math.sin(i * 0.4) * 6 + (i % 2) * 2,
+            percentage: 60 + (i * 1.5)
           });
         }
       } else if (timeRange === 'week') {
         for (let i = 6; i >= 0; i--) {
           data.push({
             time: baseTime.clone().subtract(i, 'days').format('ddd DD'),
-            temperature: 30 + Math.random() * 20 + Math.sin(i * 0.5) * 5,
-            voltage: 380 + Math.random() * 30 + Math.cos(i * 0.3) * 10,
-            current: 10 + Math.random() * 25 + Math.sin(i * 0.4) * 8,
-            percentage: 50 + Math.random() * 45 + Math.sin(i * 0.2) * 10
+            temperature: 25 + Math.sin(i * 0.6) * 3 + (i % 2) * 0.4,
+            voltage: 372 + Math.cos(i * 0.4) * 10 + (i % 3) * 0.8,
+            current: 14 + Math.sin(i * 0.3) * 5 + (i % 2) * 1,
+            percentage: 65 + (i * 4)
           });
         }
       } else if (timeRange === 'month') {
-        // Show last 30 days with dates spanning multiple months
         for (let i = 29; i >= 0; i--) {
           data.push({
             time: baseTime.clone().subtract(i, 'days').format('MMM D'),
-            temperature: 30 + Math.random() * 20 + Math.sin(i * 0.5) * 5,
-            voltage: 380 + Math.random() * 30 + Math.cos(i * 0.3) * 10,
-            current: 10 + Math.random() * 25 + Math.sin(i * 0.4) * 8,
-            percentage: 50 + Math.random() * 45 + Math.sin(i * 0.2) * 10
+            temperature: 23 + Math.sin(i * 0.25) * 5 + (i % 4) * 0.3,
+            voltage: 365 + Math.cos(i * 0.15) * 25 + (i % 5) * 0.7,
+            current: 15 + Math.sin(i * 0.2) * 7 + (i % 3) * 0.9,
+            percentage: 45 + (i * 1.5)
           });
         }
       } else if (timeRange === '6months') {
-        // Show last 6 months, one point per week (26 weeks)
         for (let i = 25; i >= 0; i--) {
           data.push({
             time: baseTime.clone().subtract(i, 'weeks').format('MMM D'),
-            temperature: 30 + Math.random() * 20 + Math.sin(i * 0.5) * 5,
-            voltage: 380 + Math.random() * 30 + Math.cos(i * 0.3) * 10,
-            current: 10 + Math.random() * 25 + Math.sin(i * 0.4) * 8,
-            percentage: 50 + Math.random() * 45 + Math.sin(i * 0.2) * 10
+            temperature: 25 + Math.sin(i * 0.15) * 6 + (i % 3) * 0.5,
+            voltage: 370 + Math.cos(i * 0.08) * 20 + (i % 4) * 0.6,
+            current: 13 + Math.sin(i * 0.12) * 6 + (i % 2) * 0.8,
+            percentage: 50 + (i * 1.8)
           });
         }
       }
