@@ -82,6 +82,7 @@ Open your browser and navigate to `http://localhost:5173`.
 Create the optimized production build:
 ```bash
 npm run build
+.
 ```
 
 ---
